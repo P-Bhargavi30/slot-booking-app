@@ -1,0 +1,40 @@
+import mysql.connector
+
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="yourpassword",
+    database="slot_booking"
+)
+
+cursor = db.cursor()
+from flask import Flask, render_template, redirect
+from db_config import db, cursor
+
+app = Flask(__name__)
+
+# Home page
+@app.route('/')
+def home():
+    cursor.execute("SELECT * FROM slots")
+    slots = cursor.fetchall()
+    return render_template("index.html", slots=slots)
+
+
+# Book slot
+@app.route('/book/<int:id>')
+def book_slot(id):
+    cursor.execute("UPDATE slots SET status='booked' WHERE id=%s", (id,))
+    db.commit()
+    return redirect('/')
+
+
+# View booked slots
+@app.route('/booked')
+def booked_slots():
+    cursor.execute("SELECT * FROM slots WHERE status='booked'")
+    slots = cursor.fetchall()
+    return render_template("slots.html", slots=slots)
+
+if __name__ == '__main__':
+    app.run(debug=True)
